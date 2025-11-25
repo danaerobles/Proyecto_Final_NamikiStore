@@ -3,6 +3,7 @@ import axios from "axios"
 import * as XLSX from "xlsx"
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
+import Dashboard from "./src/Dashboard"
 
 export default function App() {
   const [locations, setLocations] = useState([])
@@ -78,7 +79,9 @@ export default function App() {
     }
 
     try {
-      const res = await axios.post("http://localhost:4000/api/vrp", { locations })
+      /* const res = await axios.post("http://localhost:4000/api/vrp", { locations }) */
+      const res = await axios.post("http://localhost:4000/api/optimize", { locations })
+
       log("Respuesta backend VRP", res.data)
       setRoutes(res.data.routes || [])
     } catch (err) {
@@ -133,4 +136,5 @@ export default function App() {
       </div>
     </div>
   )
+
 }
