@@ -8,6 +8,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@react-google-maps/api": "^2.20.7",
         "axios": "^1.13.2",
         "chart.js": "^4.5.1",
         "leaflet": "^1.9.4",
