@@ -112,6 +112,12 @@ export default function App() {
           Optimizar rutas
         </button>
 
+
+        {/* Dashboard */}
+          
+            <Dashboard />   
+        <hr />
+
         <hr />
 
         <h3>Logs</h3>
@@ -138,10 +144,6 @@ export default function App() {
           ))}
         </MapContainer>
 
-        {/* Dashboard */}
-          
-            <Dashboard />   
-        <hr />
       </div>
     </div>
     
