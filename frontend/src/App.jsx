@@ -100,10 +100,7 @@ export default function App() {
         <p>Generador de rutas + Excel + Geocoding</p>
 
         <hr />
-            {/* Dashboard */}
-          
-            <Dashboard />   
-        <hr />
+            
         
         <h3>Cargar XLSX</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
@@ -140,7 +137,15 @@ export default function App() {
             <Polyline key={rIndex} positions={route.path.map(p => [p.lat, p.lng])} color="blue" />
           ))}
         </MapContainer>
+
+        {/* Dashboard */}
+          
+            <Dashboard />   
+        <hr />
       </div>
     </div>
+    
   )
+  
 }
+
