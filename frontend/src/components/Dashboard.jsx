@@ -43,7 +43,7 @@ export default function Dashboard() {
 
     load();
   }, []);
-
+ 
   const labels = metrics.map(m => m.date);
   const orders = metrics.map(m => m.orders);
   const invalidPct = metrics.map(m => Number(m.invalid_pct.toFixed(2)));

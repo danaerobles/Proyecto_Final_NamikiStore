@@ -4,6 +4,7 @@ import * as XLSX from "xlsx"
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import Dashboard from "./components/Dashboard";
+ 
 
 
 
@@ -98,7 +99,11 @@ export default function App() {
         <p>Generador de rutas + Excel + Geocoding</p>
 
         <hr />
-
+            {/* Dashboard */}
+          
+            <Dashboard />   
+        <hr />
+        
         <h3>Cargar XLSX</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
 
