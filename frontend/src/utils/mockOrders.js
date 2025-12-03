@@ -1,54 +1,69 @@
 /**
- * Datos de Prueba (Mock Data) para Nakimi Store
- * Simula la respuesta de la Base de Datos o la carga de un CSV.
+ * Datos de Prueba (Mock Data) COMPLETOS
+ * Incluye:
+ * 1. Direcciones Reales (Santiago) -> Para ver la ruta en el mapa.
+ * 2. Errores (Datos vacíos) -> Para probar tu Validador.
+ * 3. Opción de Relleno -> Para probar el límite de 23 paradas.
  */
+
 export const mockOrders = [
-  // --- CASOS VÁLIDOS ---
+  // --- GRUPO 1: DIRECCIONES REALES (Para que el mapa funcione) ---
   {
     id: "PED-1001",
     cliente: "Ana Pérez",
     telefono: "+56912345678",
-    direccion: "Av. Providencia 1234, Santiago",
+    direccion: "Av. Providencia 1234, Providencia", // Metro Manuel Montt
     estado: "PENDIENTE"
   },
   {
     id: "PED-1002",
     cliente: "Carlos Díaz",
     telefono: "987654321",
-    direccion: "Moneda 1137, Santiago Centro",
+    direccion: "Moneda 1137, Santiago", // Cerca de La Moneda
     estado: "PENDIENTE"
   },
   {
     id: "PED-1003",
     cliente: "Luisa Tapia",
     telefono: "+56955555555",
-    direccion: "Av. Apoquindo 4500, Las Condes",
+    direccion: "Av. Apoquindo 4500, Las Condes", // Escuela Militar
     estado: "PENDIENTE"
   },
-  
-  // --- CASOS INVÁLIDOS (Para probar tu Validador REQ-1.1) ---
+  {
+    id: "PED-1004",
+    cliente: "Pedro Pascal",
+    telefono: "+56944444444",
+    direccion: "Av. Irarrázaval 2401, Ñuñoa", // Plaza Ñuñoa
+    estado: "PENDIENTE"
+  },
+  {
+    id: "PED-1005",
+    cliente: "Gabriela Mistral",
+    telefono: "+56933333333",
+    direccion: "Av. Vitacura 2900, Las Condes", // Costanera Center
+    estado: "PENDIENTE"
+  },
+
+  // --- GRUPO 2: CASOS INVÁLIDOS (Para probar que tu sistema NO falla) ---
   {
     id: "PED-ERR-1",
-    cliente: "Sin Dirección",
+    cliente: "Cliente Sin Dirección",
     telefono: "+56911111111",
-    direccion: "", // ERROR: Campo vacío
+    direccion: "", // ¡ESTO DEBE DAR ERROR ROJO! ❌
     estado: "PENDIENTE"
   },
   {
     id: "PED-ERR-2",
-    cliente: "", // ERROR: Sin nombre
-    telefono: "+56922222222",
-    direccion: "Calle Falsa 123",
+    cliente: "Cliente Fantasma",
+    telefono: "", // ¡ESTO TAMBIÉN DEBE DAR ERROR! ❌
+    direccion: "Calle Conocida 123",
     estado: "PENDIENTE"
   },
 
-  // --- RELLENO (Para probar el límite de 23 paradas REQ-2.6) ---
-  // Generamos automáticamente más pedidos para superar el límite
-  ...Array.from({ length: 25 }, (_, i) => ({
-    id: `PED-AUTO-${i + 1}`,
-    cliente: `Cliente Auto ${i + 1}`,
-    telefono: `+569000000${i}`,
-    direccion: `Calle Genérica ${i + 1}, Santiago`,
-    estado: "PENDIENTE"
-  }))
+  // --- GRUPO 3: PRUEBA DE LÍMITE (SOLO DESCOMENTAR PARA PROBAR) ---
+  // Si quieres ver la ALERTA de "Más de 23 pedidos", 
+  // borra las dos barras "//" de la linea de abajo:
+  
+  // ...Array.from({ length: 20 }, (_, i) => ({ id: `RELLENO-${i}`, cliente: `Auto ${i}`, telefono: `111`, direccion: `Calle ${i}` }))
+
 ];
