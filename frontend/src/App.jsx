@@ -8,13 +8,18 @@ import "leaflet/dist/leaflet.css"
 import { mockOrders } from './utils/mockOrders';
 import OrderValidator from './utils/OrderValidator';
 import RouteGenerator from './utils/RouteGenerator';
-import DriverView from './DriverView'; // Importamos la nueva vista
+import DriverView from './DriverView';
 
-// --- COMPONENTE 1: EL DASHBOARD DEL ADMIN (LO QUE YA HICISTE) ---
+// --- COMPONENTE 1: EL DASHBOARD DEL ADMIN (CON ORIGEN/DESTINO) ---
 function AdminDashboard({ onLogout }) {
   const [locations, setLocations] = useState([])
   const [routes, setRoutes] = useState([])
   const [backendLog, setBackendLog] = useState([])
+  
+  // --- NUEVOS ESTADOS PARA REQ-2.1 y REQ-2.2 ---
+  const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
+  const [destination, setDestination] = useState("Centro de Distribución Nakimi");
+  
   const fileRef = useRef()
 
   const log = (msg, data = null) => {
@@ -80,11 +85,13 @@ function AdminDashboard({ onLogout }) {
     } catch (err) { alert("Error backend 4000"); }
   }
 
+  // --- FUNCIÓN ACTUALIZADA PARA USAR LOS INPUTS ---
   const handleGenerateGoogleLink = () => {
     const validOrders = locations.filter(loc => loc.isValid);
     const waypoints = validOrders.map(loc => loc.address);
     try {
-      const url = RouteGenerator.generateUrl("Centro Logístico", "Centro Logístico", waypoints);
+      // Ahora usamos las variables de estado 'origin' y 'destination'
+      const url = RouteGenerator.generateUrl(origin, destination, waypoints);
       window.open(url, '_blank');
     } catch (error) { alert(error.message); }
   };
@@ -96,12 +103,37 @@ function AdminDashboard({ onLogout }) {
             <h2>Panel Admin</h2>
             <button onClick={onLogout} style={{fontSize:'12px', padding:'4px'}}>Salir</button>
         </div>
+        
         <hr />
+        
+        {/* --- SECCIÓN NUEVA: CONFIGURACIÓN DE RUTA (REQ-2.1 y 2.2) --- */}
+        <div style={{background: '#f0f0f0', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>
+            <h4 style={{margin: '0 0 10px 0'}}>📍 Configuración de Ruta</h4>
+            <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Origen:</label>
+            <input 
+                type="text" 
+                value={origin} 
+                onChange={(e) => setOrigin(e.target.value)}
+                style={{width: '93%', padding: '5px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc'}}
+            />
+            
+            <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Destino:</label>
+            <input 
+                type="text" 
+                value={destination} 
+                onChange={(e) => setDestination(e.target.value)}
+                style={{width: '93%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc'}}
+            />
+        </div>
+
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
         <h3>Cargar XLSX</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
         <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
+        
+        {/* BOTÓN AZUL AHORA USA LOS INPUTS DE ARRIBA */}
         <button onClick={handleGenerateGoogleLink} disabled={locations.filter(l => l.isValid).length === 0} style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px" }}>🗺️ Generar Link (Req 3)</button>
+        
         <hr />
         <h3>Logs</h3>
         <div style={{ fontSize: 11, background: '#f8f9fa', padding: '5px', maxHeight: '150px', overflow: 'auto' }}>
@@ -130,53 +162,25 @@ function LoginScreen({ onLogin }) {
             <div style={{ background: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', textAlign: 'center' }}>
                 <h1 style={{ color: '#333' }}>Namiki Store 📦</h1>
                 <p>Selecciona tu perfil para ingresar:</p>
-                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-                    <button 
-                        onClick={() => onLogin('admin')}
-                        style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px' }}
-                    >
-                        👨‍💻 Soy Despachador (Admin)
-                    </button>
-                    
-                    <button 
-                        onClick={() => onLogin('driver')}
-                        style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px' }}
-                    >
-                        🚚 Soy Repartidor (Driver)
-                    </button>
+                    <button onClick={() => onLogin('admin')} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px' }}>👨‍💻 Soy Despachador (Admin)</button>
+                    <button onClick={() => onLogin('driver')} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px' }}>🚚 Soy Repartidor (Driver)</button>
                 </div>
             </div>
         </div>
     );
 }
 
-// --- COMPONENTE PRINCIPAL QUE CONTROLA TODO ---
+// --- COMPONENTE PRINCIPAL ---
 export default function App() {
-    // Estado para saber qué pantalla mostrar: 'login', 'admin' o 'driver'
     const [view, setView] = useState('login');
 
-    // Función para manejar el cambio de vista
-    const handleLogin = (userType) => {
-        setView(userType);
-    };
+    const handleLogin = (userType) => { setView(userType); };
+    const handleLogout = () => { setView('login'); };
 
-    const handleLogout = () => {
-        setView('login');
-    };
-
-    // Renderizado condicional (El "Switch")
-    if (view === 'login') {
-        return <LoginScreen onLogin={handleLogin} />;
-    }
-
-    if (view === 'admin') {
-        return <AdminDashboard onLogout={handleLogout} />;
-    }
-
-    if (view === 'driver') {
-        return <DriverView onLogout={handleLogout} />;
-    }
+    if (view === 'login') return <LoginScreen onLogin={handleLogin} />;
+    if (view === 'admin') return <AdminDashboard onLogout={handleLogout} />;
+    if (view === 'driver') return <DriverView onLogout={handleLogout} />;
 
     return null;
 }
