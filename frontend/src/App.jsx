@@ -10,13 +10,13 @@ import OrderValidator from './utils/OrderValidator';
 import RouteGenerator from './utils/RouteGenerator';
 import DriverView from './DriverView';
 
-// --- COMPONENTE 1: EL DASHBOARD DEL ADMIN (CON ORIGEN/DESTINO) ---
+// --- COMPONENTE 1: EL DASHBOARD DEL ADMIN (CON COPIAR URL) ---
 function AdminDashboard({ onLogout }) {
   const [locations, setLocations] = useState([])
   const [routes, setRoutes] = useState([])
   const [backendLog, setBackendLog] = useState([])
   
-  // --- NUEVOS ESTADOS PARA REQ-2.1 y REQ-2.2 ---
+  // Estados para configuración de ruta
   const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
   const [destination, setDestination] = useState("Centro de Distribución Nakimi");
   
@@ -85,14 +85,27 @@ function AdminDashboard({ onLogout }) {
     } catch (err) { alert("Error backend 4000"); }
   }
 
-  // --- FUNCIÓN ACTUALIZADA PARA USAR LOS INPUTS ---
   const handleGenerateGoogleLink = () => {
     const validOrders = locations.filter(loc => loc.isValid);
     const waypoints = validOrders.map(loc => loc.address);
     try {
-      // Ahora usamos las variables de estado 'origin' y 'destination'
       const url = RouteGenerator.generateUrl(origin, destination, waypoints);
       window.open(url, '_blank');
+    } catch (error) { alert(error.message); }
+  };
+
+  // --- NUEVA FUNCIÓN: COPIAR AL PORTAPAPELES (REQ-9.1.3) ---
+  const handleCopyUrl = () => {
+    const validOrders = locations.filter(loc => loc.isValid);
+    if (validOrders.length === 0) return;
+    
+    const waypoints = validOrders.map(loc => loc.address);
+    try {
+      const url = RouteGenerator.generateUrl(origin, destination, waypoints);
+      // Usamos la API del navegador para copiar
+      navigator.clipboard.writeText(url)
+        .then(() => alert("✅ ¡Enlace copiado al portapapeles!\n\nYa puedes pegarlo en WhatsApp o enviarlo al conductor."))
+        .catch(err => alert("Error al copiar: " + err));
     } catch (error) { alert(error.message); }
   };
 
@@ -106,33 +119,31 @@ function AdminDashboard({ onLogout }) {
         
         <hr />
         
-        {/* --- SECCIÓN NUEVA: CONFIGURACIÓN DE RUTA (REQ-2.1 y 2.2) --- */}
+        {/* CONFIGURACIÓN DE RUTA */}
         <div style={{background: '#f0f0f0', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>
             <h4 style={{margin: '0 0 10px 0'}}>📍 Configuración de Ruta</h4>
             <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Origen:</label>
-            <input 
-                type="text" 
-                value={origin} 
-                onChange={(e) => setOrigin(e.target.value)}
-                style={{width: '93%', padding: '5px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc'}}
-            />
-            
+            <input type="text" value={origin} onChange={(e) => setOrigin(e.target.value)} style={{width: '93%', padding: '5px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc'}} />
             <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Destino:</label>
-            <input 
-                type="text" 
-                value={destination} 
-                onChange={(e) => setDestination(e.target.value)}
-                style={{width: '93%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc'}}
-            />
+            <input type="text" value={destination} onChange={(e) => setDestination(e.target.value)} style={{width: '93%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc'}} />
         </div>
 
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
         <h3>Cargar XLSX</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
-        <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
         
-        {/* BOTÓN AZUL AHORA USA LOS INPUTS DE ARRIBA */}
+        {/* BOTONES DE ACCIÓN */}
+        <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
         <button onClick={handleGenerateGoogleLink} disabled={locations.filter(l => l.isValid).length === 0} style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px" }}>🗺️ Generar Link (Req 3)</button>
+        
+        {/* --- NUEVO BOTÓN: COPIAR --- */}
+        <button 
+            onClick={handleCopyUrl} 
+            disabled={locations.filter(l => l.isValid).length === 0} 
+            style={{ marginTop: 10, width: '100%', padding: "10px", background: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: 'pointer' }}
+        >
+            📋 Copiar Enlace
+        </button>
         
         <hr />
         <h3>Logs</h3>
@@ -155,7 +166,6 @@ function AdminDashboard({ onLogout }) {
   )
 }
 
-// --- COMPONENTE 2: PANTALLA DE LOGIN (SIMULADO) ---
 function LoginScreen({ onLogin }) {
     return (
         <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f2f5', fontFamily: 'sans-serif' }}>
@@ -171,16 +181,12 @@ function LoginScreen({ onLogin }) {
     );
 }
 
-// --- COMPONENTE PRINCIPAL ---
 export default function App() {
     const [view, setView] = useState('login');
-
     const handleLogin = (userType) => { setView(userType); };
     const handleLogout = () => { setView('login'); };
-
     if (view === 'login') return <LoginScreen onLogin={handleLogin} />;
     if (view === 'admin') return <AdminDashboard onLogout={handleLogout} />;
     if (view === 'driver') return <DriverView onLogout={handleLogout} />;
-
     return null;
 }
