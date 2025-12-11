@@ -17,8 +17,8 @@ function AdminDashboard({ onLogout }) {
   const [backendLog, setBackendLog] = useState([])
   
   // Estados para configuración de ruta
-  const [origin, setOrigin] = useState("Centro de Distribución Namiki");
-  const [destination, setDestination] = useState("Centro de Distribución Namiki");
+  const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
+  const [destination, setDestination] = useState("Centro de Distribución Nakimi");
   
   const fileRef = useRef()
 
@@ -111,24 +111,25 @@ function AdminDashboard({ onLogout }) {
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "sans-serif" }}>
-      <div style={{ width: 380, padding: 12, overflow: "auto", borderRight: "1px solid #ccccccff" }}>
+      <div style={{ width: 380, padding: 12, overflow: "auto", borderRight: "1px solid #ccc" }}>
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-            <h2>Carga De Ruta De Envío</h2>
+            <h2>Panel Admin</h2>
             <button onClick={onLogout} style={{fontSize:'12px', padding:'4px'}}>Salir</button>
         </div>
         
         <hr />
         
         {/* CONFIGURACIÓN DE RUTA */}
-        <div style={{background: '#f0f0f0ff', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>
+        <div style={{background: '#f0f0f0', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>
+            <h4 style={{margin: '0 0 10px 0'}}>📍 Configuración de Ruta</h4>
             <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Origen:</label>
-            <input type="text" value={origin} onChange={(e) => setOrigin(e.target.value)} style={{width: '93%', padding: '5px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccccccff'}} />
+            <input type="text" value={origin} onChange={(e) => setOrigin(e.target.value)} style={{width: '93%', padding: '5px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc'}} />
             <label style={{fontSize: '12px', fontWeight: 'bold'}}>Punto de Destino:</label>
             <input type="text" value={destination} onChange={(e) => setDestination(e.target.value)} style={{width: '93%', padding: '5px', borderRadius: '4px', border: '1px solid #ccc'}} />
         </div>
 
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
-        <h3>Cargar Archivo</h3>
+        <h3>Cargar XLSX</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
         
         {/* BOTONES DE ACCIÓN */}
@@ -169,10 +170,10 @@ function LoginScreen({ onLogin }) {
     return (
         <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f2f5', fontFamily: 'sans-serif' }}>
             <div style={{ background: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-                <h1 style={{ color: '#333' }}>Namiki Route📦</h1>
+                <h1 style={{ color: '#333' }}>Namiki Store 📦</h1>
                 <p>Selecciona tu perfil para ingresar:</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-                    <button onClick={() => onLogin('admin')} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px' }}>👨‍💻 Soy Gestor Logístico (Admin)</button>
+                    <button onClick={() => onLogin('admin')} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#2c3e50', color: 'white', border: 'none', borderRadius: '5px' }}>👨‍💻 Soy Despachador (Admin)</button>
                     <button onClick={() => onLogin('driver')} style={{ padding: '15px 30px', fontSize: '16px', cursor: 'pointer', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px' }}>🚚 Soy Repartidor (Driver)</button>
                 </div>
             </div>
