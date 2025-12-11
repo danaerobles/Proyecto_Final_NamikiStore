@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react"
 import axios from "axios"
 import * as XLSX from "xlsx"
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet"
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 import "leaflet/dist/leaflet.css"
 
 // Importamos tus módulos
@@ -109,6 +110,18 @@ function AdminDashboard({ onLogout }) {
     } catch (error) { alert(error.message); }
   };
 
+  // --- REQ-2.5: DRAG AND DROP PARA ORDENAR RUTA ---
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(locations);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setLocations(items);
+    log(`Pedido "${reorderedItem.cliente}" movido a posición ${result.destination.index + 1}`);
+  };
+
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "sans-serif" }}>
       <div style={{ width: 380, padding: 12, overflow: "auto", borderRight: "1px solid #ccc" }}>
@@ -129,8 +142,55 @@ function AdminDashboard({ onLogout }) {
         </div>
 
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
-        <h3>Cargar XLSX</h3>
+        <h3>Cargar Archivos</h3>
         <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
+        
+        {/* REQ-9.1.5: CONTADOR DE PARADAS */}
+        {locations.filter(l => l.isValid).length > 0 && (
+          <div style={{marginTop: '10px', padding: '8px', background: '#fff3cd', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center'}}>
+            📍 Paradas: {locations.filter(l => l.isValid).length} / 23
+            {locations.filter(l => l.isValid).length > 23 && <span style={{color: 'red'}}> ⚠️ Excede límite</span>}
+          </div>
+        )}
+
+        {/* REQ-9.1.4: LISTA ORDENABLE CON DRAG-AND-DROP */}
+        {locations.filter(l => l.isValid).length > 0 && (
+          <>
+            <h3 style={{marginTop: '15px'}}>Orden de Entrega:</h3>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="orders">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} style={{maxHeight: '200px', overflow: 'auto', border: '1px solid #ddd', borderRadius: '4px', padding: '5px'}}>
+                    {locations.filter(l => l.isValid).map((loc, index) => (
+                      <Draggable key={loc.id} draggableId={String(loc.id)} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                              padding: '8px',
+                              margin: '4px 0',
+                              background: snapshot.isDragging ? '#e3f2fd' : 'white',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                              fontSize: '12px',
+                              cursor: 'grab',
+                              ...provided.draggableProps.style
+                            }}
+                          >
+                            <strong>#{index + 1}</strong> {loc.cliente} - {loc.address}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </>
+        )}
         
         {/* BOTONES DE ACCIÓN */}
         <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
