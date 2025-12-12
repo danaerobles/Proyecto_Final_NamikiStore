@@ -18,8 +18,8 @@ function AdminDashboard({ onLogout }) {
   const [backendLog, setBackendLog] = useState([])
   
   // Estados para configuración de ruta
-  const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
-  const [destination, setDestination] = useState("Centro de Distribución Nakimi");
+  const [origin, setOrigin] = useState("Centro de Distribución Namiki");
+  const [destination, setDestination] = useState("Centro de Distribución Namiki");
   
   // Estados para manejo de archivos
   const [pendingFile, setPendingFile] = useState(null)
@@ -268,8 +268,8 @@ function AdminDashboard({ onLogout }) {
                 <br/>Google Maps permite un máximo de <strong>25 paradas</strong> (incluyendo origen y destino).
                 <br/><br/>
                 <strong>Solución:</strong><br/>
-                Por favor, <strong>seleccione un máximo de 23 pedidos</strong> para la Ruta 1.
-                <br/>Los pedidos restantes deberán crear una Ruta 2.
+                Por favor,  <strong>seleccione un máximo de 23 pedidos</strong> para la Ruta 1.
+                <br/>
               </div>
             )}
           </>
