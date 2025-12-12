@@ -29,6 +29,9 @@ function AdminDashboard({ onLogout }) {
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [linkGenerated, setLinkGenerated] = useState(false)
   
+  // Estado para efecto visual del botón de archivo
+  const [isFileButtonPressed, setIsFileButtonPressed] = useState(false)
+  
   const fileRef = useRef()
 
   const log = (msg, data = null) => {
@@ -195,12 +198,44 @@ function AdminDashboard({ onLogout }) {
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
         
         <h3>Cargar Archivos</h3>
+        {/* Botón azul estilizado para cargar archivo */}
+        <label 
+          htmlFor="fileUpload"
+          onMouseDown={() => !isLoadingFile && setIsFileButtonPressed(true)}
+          onMouseUp={() => setIsFileButtonPressed(false)}
+          onMouseLeave={() => setIsFileButtonPressed(false)}
+          style={{
+            display: 'block',
+            width: '100%',
+            padding: '10px',
+            background: isFileButtonPressed 
+              ? 'linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%)' 
+              : 'linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%)',
+            color: 'white',
+            border: '1px solid #0b5ed7',
+            borderRadius: '10px',
+            cursor: isLoadingFile ? 'not-allowed' : 'pointer',
+            boxShadow: isFileButtonPressed 
+              ? '0 2px 5px rgba(13,202,240,0.4)' 
+              : '0 4px 10px rgba(13,110,253,0.35)',
+            opacity: isLoadingFile ? 0.6 : 1,
+            textAlign: 'center',
+            fontWeight: 'bold',
+            boxSizing: 'border-box',
+            transition: 'all 0.15s ease',
+            transform: isFileButtonPressed ? 'scale(0.98)' : 'scale(1)'
+          }}
+        >
+          📥 Seleccionar archivo
+        </label>
         <input 
+          id="fileUpload"
           type="file" 
           ref={fileRef} 
           accept=".xlsx" 
           onChange={handleFileSelect} 
           disabled={isLoadingFile}
+          style={{ display: 'none' }}
         />
         
         {/* BOTÓN ACEPTAR */}
