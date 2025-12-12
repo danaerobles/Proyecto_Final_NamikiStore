@@ -306,7 +306,7 @@ function AdminDashboard({ onLogout }) {
               }}>
                 <strong>⚠️ Advertencia:</strong><br/>
                 Se han cargado <strong>{locations.filter(l => l.isValid).length} pedidos</strong>.
-                <br/>Google Maps permite un máximo de <strong>25 paradas</strong> (incluyendo origen y destino).
+                <br/>Google Maps permite un máximo de <strong>23 paradas</strong> (incluyendo origen y destino).
                 <br/><br/>
                 <strong>Solución:</strong><br/>
                 Por favor,  <strong>seleccione un máximo de 23 pedidos</strong> para la Ruta 1.
