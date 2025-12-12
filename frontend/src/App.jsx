@@ -49,6 +49,8 @@ function AdminDashboard({ onLogout }) {
       };
     });
     setLocations(processedMock);
+    // Limpia rutas previas para evitar polilíneas obsoletas
+    setRoutes([]);
     setLinkGenerated(false); // Resetear cuando se cargan nuevos datos
   };
 
@@ -97,6 +99,8 @@ function AdminDashboard({ onLogout }) {
       }
       
       setLocations(output);
+      // Limpia rutas previas para evitar polilíneas obsoletas
+      setRoutes([]);
       log(`✅ ${output.length} pedidos cargados correctamente`);
       setPendingFile(null);
       setLinkGenerated(false); // Resetear cuando se cargan nuevos datos
@@ -163,6 +167,8 @@ function AdminDashboard({ onLogout }) {
     items.splice(result.destination.index, 0, reorderedItem);
     
     setLocations(items);
+    // Limpia rutas previas porque cambió el orden de entrega
+    setRoutes([]);
     setLinkGenerated(false); // Resetear porque cambió el orden
     log(`Pedido "${reorderedItem.cliente}" movido a posición ${result.destination.index + 1}`);
   };
