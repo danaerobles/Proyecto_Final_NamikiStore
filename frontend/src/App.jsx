@@ -231,12 +231,48 @@ function AdminDashboard({ onLogout }) {
           </div>
         )}
         
-        {/* REQ-9.1.5: CONTADOR DE PARADAS */}
+        {/* REQ-9.1.5 & REQ-2.7: CONTADOR DE PARADAS Y ADVERTENCIA DE LÍMITE */}
         {locations.filter(l => l.isValid).length > 0 && (
-          <div style={{marginTop: '10px', padding: '8px', background: '#fff3cd', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center'}}>
-            📍 Paradas: {locations.filter(l => l.isValid).length} / 23
-            {locations.filter(l => l.isValid).length > 23 && <span style={{color: 'red'}}> ⚠️ Excede límite</span>}
-          </div>
+          <>
+            <div style={{
+              marginTop: '10px', 
+              padding: '10px', 
+              background: locations.filter(l => l.isValid).length > 23 ? '#f8d7da' : '#fff3cd', 
+              borderRadius: '4px', 
+              fontSize: '14px', 
+              fontWeight: 'bold', 
+              textAlign: 'center',
+              border: locations.filter(l => l.isValid).length > 23 ? '2px solid #f5c6cb' : '1px solid #ffc107'
+            }}>
+              📍 Paradas: {locations.filter(l => l.isValid).length} / 23
+              {locations.filter(l => l.isValid).length > 23 && (
+                <span style={{color: '#721c24', display: 'block', marginTop: '5px'}}>
+                  ⚠️ LÍMITE EXCEDIDO
+                </span>
+              )}
+            </div>
+            
+            {/* REQ-2.7: MENSAJE DE ADVERTENCIA DETALLADO */}
+            {locations.filter(l => l.isValid).length > 23 && (
+              <div style={{
+                marginTop: '10px',
+                padding: '12px',
+                background: '#fff3cd',
+                borderLeft: '4px solid #ffc107',
+                borderRadius: '4px',
+                fontSize: '12px',
+                color: '#856404'
+              }}>
+                <strong>⚠️ Advertencia:</strong><br/>
+                Se han cargado <strong>{locations.filter(l => l.isValid).length} pedidos</strong>.
+                <br/>Google Maps permite un máximo de <strong>25 paradas</strong> (incluyendo origen y destino).
+                <br/><br/>
+                <strong>Solución:</strong><br/>
+                Por favor, <strong>seleccione un máximo de 23 pedidos</strong> para la Ruta 1.
+                <br/>Los pedidos restantes deberán crear una Ruta 2.
+              </div>
+            )}
+          </>
         )}
 
         {/* REQ-9.1.4: LISTA ORDENABLE CON DRAG-AND-DROP */}
@@ -283,15 +319,38 @@ function AdminDashboard({ onLogout }) {
         )}
         
         {/* BOTONES DE ACCIÓN */}
-        <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
+        {locations.filter(l => l.isValid).length <= 23 && (
+          <>
+            <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
+            
+            <button 
+              onClick={handleGenerateGoogleLink} 
+              disabled={locations.filter(l => l.isValid).length === 0 || isGeneratingLink} 
+              style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px", opacity: isGeneratingLink ? 0.6 : 1 }}
+            >
+              {isGeneratingLink ? "⏳ Generando link..." : "🗺️ Generar Link (Req 3)"}
+            </button>
+          </>
+        )}
         
-        <button 
-          onClick={handleGenerateGoogleLink} 
-          disabled={locations.filter(l => l.isValid).length === 0 || isGeneratingLink} 
-          style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px", opacity: isGeneratingLink ? 0.6 : 1 }}
-        >
-          {isGeneratingLink ? "⏳ Generando link..." : "🗺️ Generar Link (Req 3)"}
-        </button>
+        {/* MENSAJE: BOTONES DESHABILITADOS POR EXCESO DE WAYPOINTS */}
+        {locations.filter(l => l.isValid).length > 23 && (
+          <button 
+            disabled 
+            style={{ 
+              marginTop: 20, 
+              width: '100%', 
+              padding: "10px", 
+              background: "#ccc", 
+              color: "#999", 
+              border: "none", 
+              borderRadius: "4px",
+              cursor: "not-allowed"
+            }}
+          >
+            🔒 Botones deshabilitados (reduce pedidos a 23 máximo)
+          </button>
+        )}
         
         {/* INDICADOR DE GENERACIÓN */}
         {isGeneratingLink && (
