@@ -21,6 +21,10 @@ function AdminDashboard({ onLogout }) {
   const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
   const [destination, setDestination] = useState("Centro de Distribución Nakimi");
   
+  // Estados para manejo de archivos
+  const [pendingFile, setPendingFile] = useState(null)
+  const [isLoadingFile, setIsLoadingFile] = useState(false)
+  
   const fileRef = useRef()
 
   const log = (msg, data = null) => {
@@ -43,39 +47,60 @@ function AdminDashboard({ onLogout }) {
     setLocations(processedMock);
   };
 
-  const handleFile = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
-    const output = [];
+    setPendingFile(file);
+    log(`Archivo seleccionado: ${file.name}`);
+  }
 
-    for (const r of rows) {
-      const rawAddress = r["dirección"] || r["address"] || "";
-      const fullAddress = `${rawAddress}, ${r["departamento"] || ""}, ${r["comuna"] || ""}`;
-      const tempOrder = {
-        id: r["id"] || r["order_number"] || "Excel",
-        cliente: r["cliente"] || "Cliente",
-        telefono: r["telefono"] || "999999999",
-        direccion: fullAddress
-      };
-      const validation = OrderValidator.validate(tempOrder);
-      let geoData = { lat: 0, lng: 0 };
-      
-      if (rawAddress) {
-        try {
-          const geo = await axios.post("http://localhost:4000/api/geocode", { address: fullAddress });
-          geoData = { lat: geo.data.lat, lng: geo.data.lng };
-        } catch (err) {
-          if (r.lat && r.lng) geoData = { lat: parseFloat(r.lat), lng: parseFloat(r.lng) };
-          else geoData = { lat: -33.45 + Math.random()*0.02, lng: -70.66 + Math.random()*0.02 };
+  const handleAcceptFile = async () => {
+    if (!pendingFile) return;
+    
+    setIsLoadingFile(true);
+    log("🔄 Cargando archivo...");
+    
+    try {
+      const data = await pendingFile.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+      const output = [];
+
+      for (const r of rows) {
+        const rawAddress = r["dirección"] || r["address"] || "";
+        const fullAddress = `${rawAddress}, ${r["departamento"] || ""}, ${r["comuna"] || ""}`;
+        const tempOrder = {
+          id: r["id"] || r["order_number"] || `Excel-${Math.random()}`,
+          cliente: r["cliente"] || "Cliente",
+          telefono: r["telefono"] || "999999999",
+          direccion: fullAddress
+        };
+        const validation = OrderValidator.validate(tempOrder);
+        let geoData = { lat: 0, lng: 0 };
+        
+        if (rawAddress) {
+          try {
+            const geo = await axios.post("http://localhost:4000/api/geocode", { address: fullAddress });
+            geoData = { lat: geo.data.lat, lng: geo.data.lng };
+          } catch (err) {
+            if (r.lat && r.lng) geoData = { lat: parseFloat(r.lat), lng: parseFloat(r.lng) };
+            else geoData = { lat: -33.45 + Math.random()*0.02, lng: -70.66 + Math.random()*0.02 };
+          }
         }
+        output.push({ ...tempOrder, ...geoData, demand: parseInt(r.demand || 0, 10), isValid: validation.isValid, errors: validation.errores, address: fullAddress });
       }
-      output.push({ ...tempOrder, ...geoData, demand: parseInt(r.demand || 0, 10), isValid: validation.isValid, errors: validation.errores, address: fullAddress });
+      
+      setLocations(output);
+      log(`✅ ${output.length} pedidos cargados correctamente`);
+      setPendingFile(null);
+      if (fileRef.current) fileRef.current.value = '';
+    } catch (error) {
+      log(`❌ Error al procesar archivo: ${error.message}`);
+      alert("Error al procesar el archivo");
+    } finally {
+      setIsLoadingFile(false);
     }
-    setLocations(output);
   }
 
   const optimizeRoutes = async () => {
@@ -142,8 +167,49 @@ function AdminDashboard({ onLogout }) {
         </div>
 
         <button onClick={handleLoadMockData} style={{ width: "100%", padding: "8px", background: "#6c757d", color: "white", border: "none", borderRadius: "4px", marginBottom: "15px" }}>🧪 Cargar Mock Data</button>
+        
         <h3>Cargar Archivos</h3>
-        <input type="file" ref={fileRef} accept=".xlsx" onChange={handleFile} />
+        <input 
+          type="file" 
+          ref={fileRef} 
+          accept=".xlsx" 
+          onChange={handleFileSelect} 
+          disabled={isLoadingFile}
+        />
+        
+        {/* BOTÓN ACEPTAR */}
+        {pendingFile && !isLoadingFile && (
+          <button 
+            onClick={handleAcceptFile} 
+            style={{ 
+              width: "100%", 
+              marginTop: "10px", 
+              padding: "10px", 
+              background: "#28a745", 
+              color: "white", 
+              border: "none", 
+              borderRadius: "4px",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            ✅ Aceptar y Procesar Archivo
+          </button>
+        )}
+        
+        {/* INDICADOR DE CARGA */}
+        {isLoadingFile && (
+          <div style={{
+            marginTop: "10px",
+            padding: "10px",
+            background: "#fff3cd",
+            borderRadius: "4px",
+            textAlign: "center",
+            fontWeight: "bold"
+          }}>
+            ⏳ Cargando archivo...
+          </div>
+        )}
         
         {/* REQ-9.1.5: CONTADOR DE PARADAS */}
         {locations.filter(l => l.isValid).length > 0 && (
@@ -154,9 +220,13 @@ function AdminDashboard({ onLogout }) {
         )}
 
         {/* REQ-9.1.4: LISTA ORDENABLE CON DRAG-AND-DROP */}
+        {/* Funciona tanto con Mock Data como con archivos Excel */}
         {locations.filter(l => l.isValid).length > 0 && (
           <>
             <h3 style={{marginTop: '15px'}}>Orden de Entrega:</h3>
+            <p style={{fontSize: '12px', color: '#666', margin: '5px 0'}}>
+              💡 Arrastra con el mouse para cambiar el orden
+            </p>
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="orders">
                 {(provided) => (
