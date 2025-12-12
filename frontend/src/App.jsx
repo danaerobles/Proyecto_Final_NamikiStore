@@ -25,6 +25,10 @@ function AdminDashboard({ onLogout }) {
   const [pendingFile, setPendingFile] = useState(null)
   const [isLoadingFile, setIsLoadingFile] = useState(false)
   
+  // Estados para generación de link
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
+  const [linkGenerated, setLinkGenerated] = useState(false)
+  
   const fileRef = useRef()
 
   const log = (msg, data = null) => {
@@ -45,6 +49,7 @@ function AdminDashboard({ onLogout }) {
       };
     });
     setLocations(processedMock);
+    setLinkGenerated(false); // Resetear cuando se cargan nuevos datos
   };
 
   const handleFileSelect = (e) => {
@@ -94,6 +99,7 @@ function AdminDashboard({ onLogout }) {
       setLocations(output);
       log(`✅ ${output.length} pedidos cargados correctamente`);
       setPendingFile(null);
+      setLinkGenerated(false); // Resetear cuando se cargan nuevos datos
       if (fileRef.current) fileRef.current.value = '';
     } catch (error) {
       log(`❌ Error al procesar archivo: ${error.message}`);
@@ -114,10 +120,23 @@ function AdminDashboard({ onLogout }) {
   const handleGenerateGoogleLink = () => {
     const validOrders = locations.filter(loc => loc.isValid);
     const waypoints = validOrders.map(loc => loc.address);
-    try {
-      const url = RouteGenerator.generateUrl(origin, destination, waypoints);
-      window.open(url, '_blank');
-    } catch (error) { alert(error.message); }
+    
+    setIsGeneratingLink(true);
+    log("🔄 Generando enlace de Google Maps...");
+    
+    // Simulamos un pequeño delay para mostrar el indicador
+    setTimeout(() => {
+      try {
+        const url = RouteGenerator.generateUrl(origin, destination, waypoints);
+        window.open(url, '_blank');
+        setLinkGenerated(true);
+        log("✅ Enlace generado exitosamente");
+      } catch (error) { 
+        alert(error.message); 
+      } finally {
+        setIsGeneratingLink(false);
+      }
+    }, 500);
   };
 
   // --- NUEVA FUNCIÓN: COPIAR AL PORTAPAPELES (REQ-9.1.3) ---
@@ -144,6 +163,7 @@ function AdminDashboard({ onLogout }) {
     items.splice(result.destination.index, 0, reorderedItem);
     
     setLocations(items);
+    setLinkGenerated(false); // Resetear porque cambió el orden
     log(`Pedido "${reorderedItem.cliente}" movido a posición ${result.destination.index + 1}`);
   };
 
@@ -264,16 +284,39 @@ function AdminDashboard({ onLogout }) {
         
         {/* BOTONES DE ACCIÓN */}
         <button onClick={optimizeRoutes} style={{ marginTop: 20, width: '100%', padding: "10px", background: "#28a745", color: "white", border: "none", borderRadius: "4px" }}>⚙️ Optimizar (Backend)</button>
-        <button onClick={handleGenerateGoogleLink} disabled={locations.filter(l => l.isValid).length === 0} style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px" }}>🗺️ Generar Link (Req 3)</button>
         
-        {/* --- NUEVO BOTÓN: COPIAR --- */}
         <button 
-            onClick={handleCopyUrl} 
-            disabled={locations.filter(l => l.isValid).length === 0} 
-            style={{ marginTop: 10, width: '100%', padding: "10px", background: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: 'pointer' }}
+          onClick={handleGenerateGoogleLink} 
+          disabled={locations.filter(l => l.isValid).length === 0 || isGeneratingLink} 
+          style={{ marginTop: 10, width: '100%', padding: "10px", background: "#007bff", color: "white", border: "none", borderRadius: "4px", opacity: isGeneratingLink ? 0.6 : 1 }}
         >
-            📋 Copiar Enlace
+          {isGeneratingLink ? "⏳ Generando link..." : "🗺️ Generar Link (Req 3)"}
         </button>
+        
+        {/* INDICADOR DE GENERACIÓN */}
+        {isGeneratingLink && (
+          <div style={{
+            marginTop: "10px",
+            padding: "10px",
+            background: "#d1ecf1",
+            borderRadius: "4px",
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#0c5460"
+          }}>
+            ⏳ Generando link...
+          </div>
+        )}
+        
+        {/* BOTÓN COPIAR - SOLO APARECE DESPUÉS DE GENERAR */}
+        {linkGenerated && !isGeneratingLink && (
+          <button 
+              onClick={handleCopyUrl} 
+              style={{ marginTop: 10, width: '100%', padding: "10px", background: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: 'pointer' }}
+          >
+              📋 Copiar Enlace
+          </button>
+        )}
         
         <hr />
         <h3>Logs</h3>
