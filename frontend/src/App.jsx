@@ -7,12 +7,11 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import "leaflet/dist/leaflet.css";
 
 // Importamos tus módulos
-import { mockOrders } from './utils/mockOrders';
 import OrderValidator from './utils/OrderValidator';
 import RouteGenerator from './utils/RouteGenerator';
 import DriverView from './DriverView';
 
-// --- ESTILOS (Sin cambios) ---
+// --- ESTILOS ---
 const styles = {
   container: { display: "flex", height: "100vh", fontFamily: "Roboto, sans-serif", backgroundColor: "#f4f7f9" },
   sidebar: { width: 380, padding: 20, overflowY: "auto", borderRight: "1px solid #e0e0e0", background: "white", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" },
@@ -24,6 +23,21 @@ const styles = {
   label: { fontSize: '13px', fontWeight: '600', display: 'block', margin: '5px 0' },
   input: { width: '95%', padding: '8px', marginBottom: '10px', borderRadius: '4px', border: '1px solid #ccc', transition: 'border-color 0.2s' },
   
+  // --- NUEVO ESTILO PARA EL TOOLTIP ---
+  tooltip: { 
+      fontSize: '12px', 
+      color: '#055160', 
+      backgroundColor: '#cff4fc',
+      padding: '8px',
+      borderRadius: '4px',
+      marginTop: '-5px', 
+      marginBottom: '15px', 
+      border: '1px solid #b6effb',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px'
+  },
+
   button: (color, isPressed = false, disabled = false, isHovering = false) => {
     let finalColor = color;
     if (disabled) finalColor = '#ccc';
@@ -50,10 +64,14 @@ function AdminDashboard({ onLogout }) {
   const [routes, setRoutes] = useState([]);
   
   // Inputs de Texto
-  const [origin, setOrigin] = useState("Centro de Distribución Nakimi");
-  const [destination, setDestination] = useState("Centro de Distribución Nakimi");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
 
-  // --- NUEVO: Coordenadas específicas para pintar los marcadores Verde y Rojo ---
+  // --- Estados para mostrar/ocultar Tooltips ---
+  const [focusOrigin, setFocusOrigin] = useState(false);
+  const [focusDest, setFocusDest] = useState(false);
+
+  // --- Coordenadas específicas para pintar los marcadores Verde y Rojo ---
   const [startPoint, setStartPoint] = useState(null); // Para el marcador Verde
   const [endPoint, setEndPoint] = useState(null);     // Para el marcador Rojo
   
@@ -68,25 +86,6 @@ function AdminDashboard({ onLogout }) {
   const validLocations = useMemo(() => locations.filter(loc => loc.isValid), [locations]);
   const waypointCount = validLocations.length;
   const isLimitExceeded = waypointCount > 23;
-
-  const handleLoadMockData = () => {
-    const processedMock = mockOrders.map(order => {
-      const validation = OrderValidator.validate(order);
-      return {
-        ...order,
-        lat: -33.45 + (Math.random() * 0.05 - 0.025),
-        lng: -70.66 + (Math.random() * 0.05 - 0.025),
-        isValid: validation.isValid,
-        errors: validation.errores,
-        address: order.direccion
-      };
-    });
-    setLocations(processedMock);
-    setRoutes([]);
-    setLinkGenerated(false);
-    setStartPoint(null); // Limpiamos marcadores previos
-    setEndPoint(null);
-  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -167,7 +166,7 @@ function AdminDashboard({ onLogout }) {
       const originCoord = await getGeo(origin);
       const destCoord = await getGeo(destination);
 
-      // --- NUEVO: Guardamos estas coordenadas para pintarlas en el mapa ---
+      // --- Guardamos estas coordenadas para pintarlas en el mapa ---
       if (originCoord) setStartPoint(originCoord);
       if (destCoord) setEndPoint(destCoord);
 
@@ -231,7 +230,7 @@ function AdminDashboard({ onLogout }) {
     setLinkGenerated(false);
   };
   
-  // --- NUEVO: Función para generar Iconos de Colores (Verde, Rojo, Azul) ---
+  // --- Función para generar Iconos de Colores (Verde, Rojo, Azul) ---
   const getCustomIcon = (type, label) => {
       let bgColor = '#007bff'; // Azul (Default: Cliente)
       
@@ -268,19 +267,46 @@ function AdminDashboard({ onLogout }) {
         </div>
         <hr style={styles.hr} />
         
+        {/* CONFIGURACIÓN DE ORIGEN Y DESTINO CON TOOLTIPS */}
         <div style={styles.configBox}>
           <label style={styles.label}>Punto de Origen:</label>
-          <input type="text" value={origin} onChange={(e) => setOrigin(e.target.value)} style={styles.input} />
+          <input 
+            type="text" 
+            value={origin} 
+            onChange={(e) => setOrigin(e.target.value)} 
+            onFocus={() => setFocusOrigin(true)}
+            onBlur={() => setFocusOrigin(false)}
+            placeholder="Ej: Plaza de la Ciudadanía 26, Santiago."
+            style={styles.input} 
+          />
+          {focusOrigin && (
+              <div style={styles.tooltip}>
+                  💡 <strong>Tip:</strong> Incluye calle, número y comuna. Tal y como se muestra en el ejemplo.
+              </div>
+          )}
+
           <label style={styles.label}>Punto de Destino:</label>
-          <input type="text" value={destination} onChange={(e) => setDestination(e.target.value)} style={styles.input} />
+          <input 
+            type="text" 
+            value={destination} 
+            onChange={(e) => setDestination(e.target.value)} 
+            onFocus={() => setFocusDest(true)}
+            onBlur={() => setFocusDest(false)}
+            placeholder="Ej: Av. Grecia 2001, Ñuñoa."
+            style={styles.input} 
+          />
+           {focusDest && (
+              <div style={styles.tooltip}>
+                  🏁 <strong>Tip:</strong> Indica dónde finaliza la ruta. Tal y como se muestra en el ejemplo.
+              </div>
+          )}
         </div>
 
         <h3 style={styles.h3}>Cargar Pedidos</h3>
         <label htmlFor="fileUpload" onMouseDown={() => !isLoadingFile && setIsFileButtonPressed(true)} onMouseUp={() => setIsFileButtonPressed(false)} onMouseLeave={() => setIsFileButtonPressed(false)} style={styles.fileButton(isFileButtonPressed, isLoadingFile)}>{isLoadingFile ? "⏳ Procesando..." : "📥 Seleccionar Archivo"}</label>
         <input id="fileUpload" type="file" ref={fileRef} accept=".xlsx" onChange={handleFileSelect} disabled={isLoadingFile} style={{ display: 'none' }} />
         {pendingFile && !isLoadingFile && (<button onClick={handleAcceptFile} onMouseEnter={() => handleHover('accept', true)} onMouseLeave={() => handleHover('accept', false)} style={styles.button("#28a745", false, false, hoverState.accept)}>✅ Aceptar y Procesar</button>)}
-        <button onClick={handleLoadMockData} style={{...styles.button("#6c757d"), marginTop: '10px', fontSize: '12px'}}>🧪 Cargar Mock Data</button>
-
+        
         {locations.length > 0 && (<div style={styles.message("#d1ecf1", "#bee5eb", "#0c5460")}>Pedidos: <strong>{locations.length}</strong> (Válidos: <strong>{waypointCount}</strong>)</div>)}
         {waypointCount > 0 && (<div style={styles.message(isLimitExceeded ? '#f8d7da' : '#fff3cd', isLimitExceeded ? '#f5c6cb' : '#ffc107', isLimitExceeded ? '#721c24' : '#856404')}>📍 Paradas Válidas: <strong>{waypointCount}</strong> / 23 {isLimitExceeded && <div>⚠️ LÍMITE EXCEDIDO</div>}</div>)}
 
