@@ -121,7 +121,7 @@ function AdminDashboard({ onLogout }) {
         
         if (rawAddress && validation.isValid) {
           try {
-            const geo = await axios.post("http://localhost:4000/api/geocode", { address: fullAddress });
+            const geo = await axios.post("https://namiki-backend.onrender.com/api/geocode", { address: fullAddress });
             geoData = { lat: geo.data.lat, lng: geo.data.lng };
           } catch (err) {
             if (r.lat && r.lng) {
@@ -156,7 +156,7 @@ function AdminDashboard({ onLogout }) {
     const getGeo = async (txt) => {
         if (!txt) return null;
         try {
-            const res = await axios.post("http://localhost:4000/api/geocode", { address: txt });
+            const res = await axios.post("https://namiki-backend.onrender.com/api/geocode", { address: txt });
             return res.data;
         } catch (e) { return null; }
     };
@@ -171,7 +171,7 @@ function AdminDashboard({ onLogout }) {
       if (destCoord) setEndPoint(destCoord);
 
       // 2. Enviamos todo al backend
-      const res = await axios.post("http://localhost:4000/api/vrp", { 
+      const res = await axios.post("https://namiki-backend.onrender.com/api/vrp", { 
           locations: validLocations,
           origin: originCoord,
           destination: destCoord
